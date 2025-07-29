@@ -15,7 +15,7 @@ class RegisterController extends Controller
         // Validasi input
         $validator = Validator::make($request->all(), [
             'name'         => 'required|string|max:100',
-            'username'     => 'required|string|max:30|unique:user,username',
+            'username'     => 'required|string|max:30|unique:users,username',
             'password'     => 'required|string|min:6',
             'number_phone' => 'nullable|string|max:20',
         ]);
