@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class ScanAttachment extends Model
 {
-    // Sesuaikan dengan nama tabel kalau tidak pakai konvensi Laravel (jamak dari nama model)
     protected $table = 'scan_attachment';
 
-    // Sesuaikan kolom yang boleh diisi
-    protected $fillable = ['name', 'id_genus', 'confidence', 'user_id'];
+    protected $fillable = [
+        'name',
+        'id_genus',
+        'confidence',
+        'user_id',
+        'created_at',
+        'updated_at',
+    ];
 }

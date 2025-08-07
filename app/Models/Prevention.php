@@ -1,4 +1,4 @@
-<?php
+<?php   
 
 namespace App\Models;
 
@@ -8,4 +8,11 @@ class Prevention extends Model
 {
     protected $table = 'prevention';
     protected $primaryKey = 'id_prevention';
+
+    protected $fillable = [
+        'prevention_name',   // contoh kolom nama pencegahan
+        'description',       // deskripsi pencegahan
+        'created_at',
+        'updated_at',
+    ];
 }
