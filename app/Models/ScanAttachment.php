@@ -18,4 +18,9 @@ class ScanAttachment extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function genus()
+    {
+        return $this->belongsTo(Genus::class, 'id_genus', 'id_genus');
+    }
 }
