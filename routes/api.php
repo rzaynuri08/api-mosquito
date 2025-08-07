@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\Api\ClassificationController;
+use App\Http\Controllers\Api\HistoryController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +21,8 @@ use App\Http\Controllers\RegisterController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
+
+Route::post('/classifications', [ClassificationController::class, 'store']);
+
+Route::get('/history', [HistoryController::class, 'index']);
 
