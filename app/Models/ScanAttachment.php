@@ -8,6 +8,8 @@ class ScanAttachment extends Model
 {
     protected $table = 'scan_attachment';
 
+    protected $primaryKey = 'id_attachment';
+
     protected $fillable = [
         'name',
         'id_genus',
