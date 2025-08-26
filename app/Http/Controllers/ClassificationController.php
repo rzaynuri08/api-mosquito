@@ -11,46 +11,53 @@ use App\Models\History;
 class ClassificationController extends Controller
 {
     public function store(Request $request)
-    {
-        // 🔹 Validasi input
-        $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png',
-            'genus' => 'required|string',
-            'confidence' => 'required|numeric',
-            'id_user' => 'required|integer',
-        ]);
+{
+    $request->validate([
+        'images.*' => 'required|image|mimes:jpg,jpeg,png',
+        'genus' => 'required|string',
+        'confidence' => 'required|numeric',
+        'id_user' => 'required|integer',
+    ]);
 
-        // 🔹 Simpan file gambar
-        $file = $request->file('image');
+    // Cari / buat genus
+    $genus = Genus::firstOrCreate(['name' => $request->genus]);
+
+    // Buat history dulu
+    $history = History::create([
+        'id_user' => $request->id_user,
+        'final_label' => null,
+        'final_confidence' => null,
+    ]);
+
+    $attachments = [];
+    foreach ($request->file('images') as $file) {
         $filename = time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs('uploads', $filename, 'public');
+        $path = $file->storeAs('scan', $filename, 'public');
 
-        // 🔹 Cari atau buat genus
-        $genus = Genus::firstOrCreate(['name' => $request->genus]);
-
-        // 🔹 Buat dulu history (tanpa id_attachment)
-        $history = History::create([
-            'id_user' => $request->id_user,
-            'final_label' => $genus->name,
-            'final_confidence' => $request->confidence,
-        ]);
-
-        // 🔹 Simpan attachment dengan id_history yang baru dibuat
-        $attachment = ScanAttachment::create([
+        $attachments[] = ScanAttachment::create([
             'name' => $filename,
             'id_genus' => $genus->id_genus,
             'confidence' => $request->confidence,
-            'id_history' => $history->id_history, // <--- penting
-        ]);
-
-        // 🔹 Update kembali history dengan id_attachment yang barusan
-        $history->update([
-            'id_attachment' => $attachment->id_attachment,
-        ]);
-
-        return response()->json([
-            'message' => 'Klasifikasi berhasil disimpan',
-            'history' => $history->load('attachments', 'attachments.genus'),
+            'id_history' => $history->id_history,
         ]);
     }
+
+    return response()->json([
+        'id_history' => $history->id_history,
+        'id_user' => $history->id_user,
+        'images' => collect($attachments)->map(fn($a) => [
+            'id_attachment' => $a->id_attachment,
+            'file_name' => $a->name,
+            'file_url' => asset('storage/scan/' . $a->name),
+            'confidence' => $a->confidence,
+        ]),
+        'genus_name' => $genus->name,
+        'prevention' => $genus->prevention->description ?? null,
+        'disease_risk' => $genus->diseaseRisk->description ?? null,
+        'final_label' => $history->final_label,
+        'final_confidence' => $history->final_confidence,
+        'created_at' => $history->created_at,
+    ]);
+}
+
 }
