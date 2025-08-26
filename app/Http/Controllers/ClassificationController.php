@@ -12,11 +12,11 @@ class ClassificationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'images' => 'required|array|size:3', // harus 3 gambar
-            'images.*' => 'image|mimes:jpg,jpeg,png',
-            'genus_name' => 'required|string',
-            'confidence' => 'required|numeric',
-            'user_id' => 'required|integer',
+            'images'      => 'required|array|size:3', // harus 3 gambar
+            'images.*'    => 'image|mimes:jpg,jpeg,png',
+            'genus_name'  => 'required|string',
+            'confidence'  => 'required|numeric',
+            'user_id'     => 'required|integer',
         ]);
 
         // Cari atau buat genus berdasarkan nama
@@ -26,9 +26,9 @@ class ClassificationController extends Controller
 
         // Buat History terlebih dahulu
         $history = History::create([
-            'id_user' => $request->user_id,
-            'final_label' => $genus->name,
-            'final_confidence' => $request->confidence
+            'id_user'         => $request->user_id,
+            'final_label'     => $genus->name,
+            'final_confidence'=> $request->confidence
         ]);
 
         $attachments = [];
@@ -39,8 +39,8 @@ class ClassificationController extends Controller
 
             // Simpan ke tabel ScanAttachment (dengan id_history sama)
             $attachment = ScanAttachment::create([
-                'name' => $filename,
-                'id_genus' => $genus->id_genus,
+                'name'       => $filename,
+                'id_genus'   => $genus->id_genus,
                 'confidence' => $request->confidence,
                 'id_history' => $history->id_history
             ]);
@@ -52,20 +52,21 @@ class ClassificationController extends Controller
 
             $attachments[] = [
                 'id_attachment' => $attachment->id_attachment,
-                'file_name' => $attachment->name,
-                'file_url' => asset('storage/scan/' . $attachment->name),
-                'confidence' => $attachment->confidence
+                'file_name'     => $attachment->name,
+                'file_url'      => asset('storage/scan/' . $attachment->name),
+                'confidence'    => $attachment->confidence
             ];
         }
 
         return response()->json([
-            'message' => 'Classification (multi-view) saved successfully',
-            'user_id' => $request->user_id,
-            'genus_id' => $genus->id_genus,
-            'genus_name' => $genus->name,
-            'final_confidence' => $request->confidence,
-            'id_history' => $history->id_history,
-            'attachments' => $attachments
+            'message'         => 'Classification (multi-view) saved successfully',
+            'id_history'      => $history->id_history,
+            'id_user'         => $request->user_id,
+            'genus_id'        => $genus->id_genus,
+            'genus_name'      => $genus->name,
+            'final_label'     => $history->final_label,
+            'final_confidence'=> $history->final_confidence,
+            'attachments'     => $attachments
         ]);
     }
 }
