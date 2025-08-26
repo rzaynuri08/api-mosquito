@@ -6,18 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ScanAttachment extends Model
 {
-    protected $table = 'scan_attachment';
-
     protected $primaryKey = 'id_attachment';
+    protected $fillable = ['name', 'id_genus', 'confidence', 'id_history'];
 
-    protected $fillable = [
-        'name',
-        'id_genus',
-        'confidence',
-        'user_id',
-        'created_at',
-        'updated_at',
-    ];
+    public function history()
+    {
+        return $this->belongsTo(History::class, 'id_history', 'id_history');
+    }
 
     public function genus()
     {
