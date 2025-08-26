@@ -24,4 +24,9 @@ class Genus extends Model
     {
         return $this->belongsTo(DiseaseRisk::class, 'id_disease');
     }
+    
+    public function attachments()
+    {
+        return $this->hasMany(\App\Models\ScanAttachment::class, 'id_genus', 'id_genus');
+    }
 }
