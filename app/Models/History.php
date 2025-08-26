@@ -6,14 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class History extends Model
 {
-    protected $table = 'history'; // nama tabel asli
-    protected $primaryKey = 'id_history'; // primary key
-    public $timestamps = true; // kalau tabelmu ada kolom created_at & updated_at
+    protected $table = 'history';
+    protected $primaryKey = 'id_history';
+    public $timestamps = true;
+    public $incrementing = true; // <--- tambahin ini
+    protected $keyType = 'int';  // <--- tambahin juga
 
     protected $fillable = [
         'id_user',
         'final_label',
-        'final_confidence'
+        'final_confidence',
+        'id_attachment',
     ];
 
     public function attachments()
