@@ -11,39 +11,46 @@ class ClassificationController extends Controller
 {
     public function store(Request $request)
     {
-        // Validasi input
         $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png',
+            'images' => 'required|array|min:1',
+            'images.*' => 'image|mimes:jpg,jpeg,png',
             'genus_name' => 'required|string',
             'confidence' => 'required|numeric',
             'user_id' => 'required|integer',
         ]);
 
-        // Simpan file ke storage/app/public/scan
-        $filename = time() . '_' . $request->file('image')->getClientOriginalName();
-        $request->file('image')->storeAs('scan', $filename, 'public');
-
         // Cari atau buat genus
         $genus = Genus::firstOrCreate(['name' => ucfirst(strtolower($request->genus_name))]);
 
-        // Simpan scan attachment
-        $attachment = ScanAttachment::create([
-            'name' => $filename,
-            'id_genus' => $genus->id_genus,
-            'confidence' => $request->confidence
-        ]);
+        $attachments = [];
+        foreach ($request->file('images') as $img) {
+            $filename = time() . '_' . uniqid() . '_' . $img->getClientOriginalName();
+            $img->storeAs('scan', $filename, 'public');
 
-        // Simpan history
+            $attachment = ScanAttachment::create([
+                'name' => $filename,
+                'id_genus' => $genus->id_genus,
+                'confidence' => $request->confidence
+            ]);
+
+            $attachments[] = [
+                'id_attachment' => $attachment->id_attachment,
+                'file_name' => $attachment->name,
+                'file_url' => asset('storage/scan/' . $attachment->name),
+                'confidence' => $attachment->confidence
+            ];
+        }
+
+        // Simpan history → pakai attachment pertama
         History::create([
             'id_user' => $request->user_id,
-            'id_attachment' => $attachment->id_attachment
+            'id_attachment' => $attachments[0]['id_attachment']
         ]);
 
         return response()->json([
-            'message' => 'Classification saved successfully',
-            'image_url' => asset('storage/scan/' . $filename),
-            'attachment_id' => $attachment->id_attachment,
-            'genus_id' => $genus->id_genus
+            'message' => 'Classification (multi-view) saved successfully',
+            'genus_id' => $genus->id_genus,
+            'attachments' => $attachments
         ]);
     }
 }
