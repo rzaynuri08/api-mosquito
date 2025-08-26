@@ -24,18 +24,31 @@ class ClassificationController extends Controller
             'name' => ucfirst(strtolower($request->genus_name))
         ]);
 
+        // Buat History terlebih dahulu
+        $history = History::create([
+            'id_user' => $request->user_id,
+            'final_label' => $genus->name,
+            'final_confidence' => $request->confidence
+        ]);
+
         $attachments = [];
-        foreach ($request->file('images') as $img) {
+        foreach ($request->file('images') as $index => $img) {
             // Simpan file dengan nama unik
             $filename = time() . '_' . uniqid() . '_' . $img->getClientOriginalName();
             $img->storeAs('scan', $filename, 'public');
 
-            // Simpan ke tabel ScanAttachment
+            // Simpan ke tabel ScanAttachment (dengan id_history sama)
             $attachment = ScanAttachment::create([
                 'name' => $filename,
                 'id_genus' => $genus->id_genus,
-                'confidence' => $request->confidence
+                'confidence' => $request->confidence,
+                'id_history' => $history->id_history
             ]);
+
+            // Simpan attachment pertama sebagai referensi id_attachment di history
+            if ($index === 0) {
+                $history->update(['id_attachment' => $attachment->id_attachment]);
+            }
 
             $attachments[] = [
                 'id_attachment' => $attachment->id_attachment,
@@ -45,20 +58,13 @@ class ClassificationController extends Controller
             ];
         }
 
-        // Simpan ke tabel History (pakai attachment pertama sebagai referensi)
-        History::create([
-            'id_user' => $request->user_id,
-            'id_attachment' => $attachments[0]['id_attachment'],
-            'final_label' => $genus->name,         // tambahan: simpan hasil label
-            'final_confidence' => $request->confidence // tambahan: simpan rata-rata confidence
-        ]);
-
         return response()->json([
             'message' => 'Classification (multi-view) saved successfully',
             'user_id' => $request->user_id,
             'genus_id' => $genus->id_genus,
             'genus_name' => $genus->name,
             'final_confidence' => $request->confidence,
+            'id_history' => $history->id_history,
             'attachments' => $attachments
         ]);
     }

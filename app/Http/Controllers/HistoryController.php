@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\History;
+use App\Models\ScanAttachment;
 
 class HistoryController extends Controller
 {
@@ -12,14 +13,13 @@ class HistoryController extends Controller
         $data = History::with([
             'attachment.genus.prevention',
             'attachment.genus.disease',
-            'attachment.genus.attachments' // pastikan relasi ini ada di model Genus
         ])->orderByDesc('created_at')->get();
 
         $result = $data->map(function ($item) {
-            // Ambil semua attachment untuk genus yang sama
-            $attachments = $item->attachment->genus->attachments ?? collect([$item->attachment]);
-            // Urutkan berdasarkan id_attachment (atau urutan upload)
-            $attachments = $attachments->sortBy('id_attachment')->values();
+            // Ambil semua attachment sesuai id_history
+            $attachments = ScanAttachment::where('id_history', $item->id_history)
+                ->orderBy('id_attachment')
+                ->get();
 
             // Ambil url gambar
             $images = $attachments->map(function ($att) {
