@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Genus;
 use App\Models\ScanAttachment;
 use App\Models\History;
@@ -24,8 +23,8 @@ class ClassificationController extends Controller
         $filename = time() . '_' . $request->file('image')->getClientOriginalName();
         $request->file('image')->storeAs('scan', $filename, 'public');
 
-        // Simpan atau cari genus
-        $genus = Genus::firstOrCreate(['name' => $request->genus_name]);
+        // Cari atau buat genus
+        $genus = Genus::firstOrCreate(['name' => ucfirst(strtolower($request->genus_name))]);
 
         // Simpan scan attachment
         $attachment = ScanAttachment::create([
