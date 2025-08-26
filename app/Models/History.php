@@ -13,8 +13,7 @@ class History extends Model
     protected $fillable = [
         'id_user',
         'final_label',
-        'final_confidence',
-        'id_attachment',
+        'final_confidence'
     ];
 
     public function attachments()
