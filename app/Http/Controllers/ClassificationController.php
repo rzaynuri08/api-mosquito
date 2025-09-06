@@ -42,30 +42,46 @@ class ClassificationController extends Controller
                 'final_confidence' => $validated['confidence'],
             ]);
 
-            // Simpan attachment sambil bawa id_history
-            $attachment = ScanAttachment::create([
+            // Simpan attachment 3 kali, masing-masing untuk abdomen, body, head
+            $attachmentAbdomen = ScanAttachment::create([
                 'id_history' => $history->id_history,
                 'id_genus' => $genus->id_genus,
-                'name' => $filenameAbdomen, // bisa diganti json untuk simpan 3 file
+                'name' => asset('storage/' . $pathAbdomen),
                 'confidence' => $validated['confidence'],
                 'path_abdomen' => $pathAbdomen,
                 'path_body' => $pathBody,
                 'path_head' => $pathHead
             ]);
 
-            // // Update history dengan id_attachment (opsional, kalau mau tau lampirannya)
-            // $history->update(['id_attachment' => $attachment->id_attachment]);
+            $attachmentBody = ScanAttachment::create([
+                'id_history' => $history->id_history,
+                'id_genus' => $genus->id_genus,
+                'name' => asset('storage/' . $pathBody),
+                'confidence' => $validated['confidence'],
+                'path_abdomen' => $pathAbdomen,
+                'path_body' => $pathBody,
+                'path_head' => $pathHead
+            ]);
+
+            $attachmentHead = ScanAttachment::create([
+                'id_history' => $history->id_history,
+                'id_genus' => $genus->id_genus,
+                'name' => asset('storage/' . $pathHead),
+                'confidence' => $validated['confidence'],
+                'path_abdomen' => $pathAbdomen,
+                'path_body' => $pathBody,
+                'path_head' => $pathHead
+            ]);
 
             return response()->json([
                 'message' => 'Classification saved successfully',
                 'genus_id' => $genus->id_genus,
-                'attachment_id' => $attachment->id_attachment,
+                'attachments' => [
+                    'abdomen' => $attachmentAbdomen->name,
+                    'body' => $attachmentBody->name,
+                    'head' => $attachmentHead->name,
+                ],
                 'history_id' => $history->id_history,
-                'image_urls' => [
-                    'abdomen' => asset('storage/' . $pathAbdomen),
-                    'body' => asset('storage/' . $pathBody),
-                    'head' => asset('storage/' . $pathHead),
-                ]
             ]);
 
         } catch (\Exception $e) {
