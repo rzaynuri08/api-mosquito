@@ -35,26 +35,32 @@ class ClassificationController extends Controller
             // Cari atau buat genus
             $genus = Genus::firstOrCreate(['name' => $validated['genus_name']]);
 
-            // Simpan attachment
+            // Simpan history dulu
+            $history = History::create([
+                'id_user' => $validated['user_id'],
+                'final_label' => $validated['genus_name'],
+                'final_confidence' => $validated['confidence'],
+            ]);
+
+            // Simpan attachment sambil bawa id_history
             $attachment = ScanAttachment::create([
-                'name' => $filenameAbdomen, // bisa diganti jadi json untuk simpan 3 file
+                'id_history' => $history->id_history,
                 'id_genus' => $genus->id_genus,
+                'name' => $filenameAbdomen, // bisa diganti json untuk simpan 3 file
                 'confidence' => $validated['confidence'],
                 'path_abdomen' => $pathAbdomen,
                 'path_body' => $pathBody,
                 'path_head' => $pathHead
             ]);
 
-            // Simpan history
-            History::create([
-                'id_user' => $validated['user_id'],
-                'id_attachment' => $attachment->id_attachment
-            ]);
+            // Update history dengan id_attachment (opsional, kalau mau tau lampirannya)
+            $history->update(['id_attachment' => $attachment->id_attachment]);
 
             return response()->json([
                 'message' => 'Classification saved successfully',
                 'genus_id' => $genus->id_genus,
                 'attachment_id' => $attachment->id_attachment,
+                'history_id' => $history->id_history,
                 'image_urls' => [
                     'abdomen' => asset('storage/' . $pathAbdomen),
                     'body' => asset('storage/' . $pathBody),
