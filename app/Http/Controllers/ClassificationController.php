@@ -53,8 +53,8 @@ class ClassificationController extends Controller
                 'path_head' => $pathHead
             ]);
 
-            // Update history dengan id_attachment (opsional, kalau mau tau lampirannya)
-            $history->update(['id_attachment' => $attachment->id_attachment]);
+            // // Update history dengan id_attachment (opsional, kalau mau tau lampirannya)
+            // $history->update(['id_attachment' => $attachment->id_attachment]);
 
             return response()->json([
                 'message' => 'Classification saved successfully',
