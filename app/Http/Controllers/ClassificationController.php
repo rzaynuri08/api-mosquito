@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Genus;
 use App\Models\ScanAttachment;
@@ -14,38 +13,60 @@ class ClassificationController extends Controller
     public function store(Request $request)
     {
         // Validasi input
-        $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png',
+        $validated = $request->validate([
+            'image_abdomen' => 'required|image|mimes:jpg,jpeg,png',
+            'image_body' => 'required|image|mimes:jpg,jpeg,png',
+            'image_head' => 'required|image|mimes:jpg,jpeg,png',
             'genus_name' => 'required|string',
             'confidence' => 'required|numeric',
             'user_id' => 'required|integer',
         ]);
 
-        // Simpan file ke storage/app/public/scan
-        $filename = time() . '_' . $request->file('image')->getClientOriginalName();
-        $request->file('image')->storeAs('scan', $filename, 'public');
+        try {
+            // Simpan file
+            $filenameAbdomen = time() . '_abdomen_' . $request->file('image_abdomen')->getClientOriginalName();
+            $filenameBody = time() . '_body_' . $request->file('image_body')->getClientOriginalName();
+            $filenameHead = time() . '_head_' . $request->file('image_head')->getClientOriginalName();
 
-        // Simpan atau cari genus
-        $genus = Genus::firstOrCreate(['name' => $request->genus_name]);
+            $pathAbdomen = $request->file('image_abdomen')->storeAs('scan', $filenameAbdomen, 'public');
+            $pathBody = $request->file('image_body')->storeAs('scan', $filenameBody, 'public');
+            $pathHead = $request->file('image_head')->storeAs('scan', $filenameHead, 'public');
 
-        // Simpan scan attachment
-        $attachment = ScanAttachment::create([
-            'name' => $filename,
-            'id_genus' => $genus->id_genus,
-            'confidence' => $request->confidence
-        ]);
+            // Cari atau buat genus
+            $genus = Genus::firstOrCreate(['name' => $validated['genus_name']]);
 
-        // Simpan history
-        History::create([
-            'id_user' => $request->user_id,
-            'id_attachment' => $attachment->id_attachment
-        ]);
+            // Simpan attachment
+            $attachment = ScanAttachment::create([
+                'name' => $filenameAbdomen, // bisa diganti jadi json untuk simpan 3 file
+                'id_genus' => $genus->id_genus,
+                'confidence' => $validated['confidence'],
+                'path_abdomen' => $pathAbdomen,
+                'path_body' => $pathBody,
+                'path_head' => $pathHead
+            ]);
 
-        return response()->json([
-            'message' => 'Classification saved successfully',
-            'image_url' => asset('storage/scan/' . $filename),
-            'attachment_id' => $attachment->id_attachment,
-            'genus_id' => $genus->id_genus
-        ]);
+            // Simpan history
+            History::create([
+                'id_user' => $validated['user_id'],
+                'id_attachment' => $attachment->id_attachment
+            ]);
+
+            return response()->json([
+                'message' => 'Classification saved successfully',
+                'genus_id' => $genus->id_genus,
+                'attachment_id' => $attachment->id_attachment,
+                'image_urls' => [
+                    'abdomen' => asset('storage/' . $pathAbdomen),
+                    'body' => asset('storage/' . $pathBody),
+                    'head' => asset('storage/' . $pathHead),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error while saving classification',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
