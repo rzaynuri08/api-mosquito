@@ -25,4 +25,5 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/classifications', [ClassificationController::class, 'store']);
 
 Route::get('/history', [HistoryController::class, 'index']);
+Route::get('/history/user/{id_user}', [HistoryController::class, 'byUser']);
 

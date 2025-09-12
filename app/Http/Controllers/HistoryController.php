@@ -20,6 +20,23 @@ class HistoryController extends Controller
         return response()->json($result);
     }
 
+    /**
+     * Ambil semua history berdasarkan id_user
+     */
+    public function byUser($id_user)
+    {
+        $data = History::with([
+            'attachments.genus.prevention',
+            'attachments.genus.disease',
+        ])->where('id_user', $id_user)
+          ->orderByDesc('created_at')
+          ->get();
+
+        $result = $data->map(fn($item) => $this->formatHistory($item));
+
+        return response()->json($result);
+    }
+
     public function show($id)
     {
         $history = History::with([
@@ -55,9 +72,9 @@ class HistoryController extends Controller
             'id_history'       => $item->id_history,
             'id_user'          => $item->id_user,
             'images'           => $images, // biasanya 3 gambar
-            'genus_name'       => $firstAttachment->genus->name ?? null,
-            'prevention'       => $firstAttachment->genus->prevention->description ?? null,
-            'disease_risk'     => $firstAttachment->genus->disease->description ?? null,
+            'genus_name'       => $firstAttachment?->genus?->name,
+            'prevention'       => $firstAttachment?->genus?->prevention?->description,
+            'disease_risk'     => $firstAttachment?->genus?->disease?->description,
             'final_label'      => $item->final_label,
             'final_confidence' => $item->final_confidence,
             'created_at'       => $item->created_at,
