@@ -77,7 +77,12 @@ class HistoryController extends Controller
             'disease_risk'     => $firstAttachment?->genus?->disease?->description,
             'final_label'      => $item->final_label,
             'final_confidence' => $item->final_confidence,
-            'created_at'       => $item->created_at,
+            'created_at'       => $item->created_at
+                                    ? $item->created_at->timezone('Asia/Jakarta')->toDateTimeString()
+                                    : null,
+            'updated_at'       => $item->updated_at
+                                    ? $item->updated_at->timezone('Asia/Jakarta')->toDateTimeString()
+                                    : null,
         ];
     }
 }
